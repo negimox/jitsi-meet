@@ -71,11 +71,50 @@ MiddlewareRegistry.register(store => next => action => {
     case APP_WILL_MOUNT: {
         const _permissionsListener = (permissions: Object) => {
             store.dispatch(devicePermissionsChanged(permissions));
+
+            // For Chrome with desktop deeplinking: if permissions denied, show a button to request permissions
+            const state = store.getState();
+            const deeplinkingEnabled = state['features/base/config']?.deeplinking?.desktop?.enabled;
+            const isChromeBrowser = navigator.userAgent.indexOf('Chrome') !== -1 &&
+                                  navigator.userAgent.indexOf('Firefox') === -1; // Detect Chrome but not Firefox
+
+            if (deeplinkingEnabled && isChromeBrowser && (!permissions.audio || !permissions.video)) {
+                // If permissions were denied in Chrome with deeplinking enabled,
+                // show a notification with a button to request permissions with user gesture
+                store.dispatch(showNotification({
+                    titleKey: 'dialog.permissionsTitle',
+                    descriptionKey: 'dialog.permissionsBlockedMessage',
+                    customActionNameKey: ['dialog.requestPermissions'],
+                    customActionHandler: [() => {
+                        // This will be triggered by a user click (valid user gesture)
+                        navigator.mediaDevices.getUserMedia({ audio: true, video: true })
+                            .then(stream => {
+                                // Clean up the stream after permissions are granted
+                                stream.getTracks().forEach(track => track.stop());
+
+                                // Refresh device list
+                                JitsiMeetJS.mediaDevices.enumerateDevices()
+                                    .then(devices => {
+                                        store.dispatch({
+                                            type: UPDATE_DEVICE_LIST,
+                                            devices
+                                        });
+                                    });
+                            })
+                            .catch(err => {
+                                logger.error('Error requesting permissions with user gesture', err);
+                            });
+                    }]
+                }, NOTIFICATION_TIMEOUT_TYPE.STICKY));
+            }
         };
         const { mediaDevices } = JitsiMeetJS;
 
         permissionsListener = _permissionsListener;
-        mediaDevices.addEventListener(JitsiMediaDevicesEvents.PERMISSIONS_CHANGED, permissionsListener);
+        mediaDevices.addEventListener(
+            JitsiMediaDevicesEvents.PERMISSION_PROMPT_IS_SHOWN,
+            () => logger.info('Media permission prompt was shown by the browser')
+        );
         Promise.all([
             mediaDevices.isDevicePermissionGranted('audio'),
             mediaDevices.isDevicePermissionGranted('video')

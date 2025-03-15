@@ -501,7 +501,10 @@
         "whiteboardLimitReference": "For more information please visit",
         "whiteboardLimitReferenceUrl": "our website",
         "whiteboardLimitTitle": "Whiteboard usage restricted",
-        "yourEntireScreen": "Your entire screen"
+        "yourEntireScreen": "Your entire screen",
+        "permissionsTitle": "Media Permissions Required",
+        "permissionsBlockedMessage": "Camera and microphone permissions are required. Please click the button below to grant access.",
+        "requestPermissions": "Grant Permissions"
     },
     "documentSharing": {
         "title": "Shared Document"
