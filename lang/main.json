@@ -207,6 +207,11 @@
         "yesterday": "Yesterday"
     },
     "deepLinking": {
+        "permissionRequest": {
+            "title": "Camera & Microphone Access Needed",
+            "description": "Please click the button below to grant access to your camera and microphone for this meeting.",
+            "button": "Enable Camera & Microphone"
+        },
         "appNotInstalled": "You need the {{app}} mobile app to join this meeting on your phone.",
         "description": "Nothing happened? We tried launching your meeting in the {{app}} desktop app. Try again or launch it in the {{app}} web app.",
         "descriptionNew": "Nothing happened? We tried launching your meeting in the {{app}} desktop app. <br /><br /> You can try again or launch it on web.",

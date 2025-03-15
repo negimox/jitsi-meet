@@ -2,7 +2,19 @@ import { appNavigate } from '../app/actions';
 import { IStore } from '../app/types';
 
 import { OPEN_DESKTOP_APP, OPEN_WEB_APP } from './actionTypes';
-
+import { CLEAR_DEEPLINK_PERMISSION_REQUEST } from './reducer';
+/**
+ * Clears the deep-linking permission request flag.
+ *
+ * @returns {{
+*     type: CLEAR_DEEPLINK_PERMISSION_REQUEST
+* }}
+*/
+export function clearDeeplinkPermissionRequest() {
+   return {
+       type: CLEAR_DEEPLINK_PERMISSION_REQUEST
+   };
+}
 /**
  * Continue to the conference page.
  *
