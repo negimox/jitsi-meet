@@ -1105,7 +1105,19 @@
             "disconnect": "Disconnect",
             "microsoftSignIn": "Sign in with Microsoft",
             "signedIn": "Currently accessing calendar events for {{email}}. Click the Disconnect button below to stop accessing calendar events.",
-            "title": "Calendar"
+            "title": "Calendar",
+            "caldavSignIn": "Sign in with CalDAV",
+            "caldav": {
+                "title": "CalDAV Sign In",
+                "serverUrl": "CalDAV Server URL",
+                "serverUrlPlaceholder": "https://nextcloud.example.com/remote.php/dav",
+                "username": "Username",
+                "password": "Password",
+                "signIn": "Sign In",
+                "missingFields": "Please fill in all fields",
+                "signInError": "Failed to sign in. Please check your credentials.",
+                "info": "Connect to your CalDAV server to access your calendar events."
+            }
         },
         "desktopShareFramerate": "Desktop sharing frame rate",
         "desktopShareHighFpsWarning": "A higher frame rate for desktop sharing might affect your bandwidth. You need to restart the screen share for the new settings to take effect.",

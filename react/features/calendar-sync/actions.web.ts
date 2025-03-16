@@ -17,6 +17,7 @@ import {
 import { refreshCalendar, setCalendarEvents } from './actions.web';
 import { _getCalendarIntegration, isCalendarEnabled } from './functions.web';
 import logger from './logger';
+import { CALENDAR_TYPE } from './constants';
 
 export * from './actions.any';
 
@@ -194,9 +195,10 @@ export function setIntegrationReady(integrationType: string) {
  *
  * @param {string} calendarType - The calendar integration which should be
  * signed into.
+ *  @param {Object} credentials - The credentials for CalDAV (if applicable).
  * @returns {Function}
  */
-export function signIn(calendarType: string) {
+export function signIn(calendarType: string, credentials?: { serverUrl: string; username: string; password: string }) {
     return (dispatch: IStore['dispatch']) => {
         const integration = _getCalendarIntegration(calendarType);
 
@@ -205,7 +207,12 @@ export function signIn(calendarType: string) {
         }
 
         return dispatch(integration.load())
-            .then(() => dispatch(integration.signIn()))
+            .then(() => {
+                if (calendarType === CALENDAR_TYPE.CALDAV && credentials) {
+                    return dispatch(integration.signIn(credentials));
+                }
+                return dispatch(integration.signIn());
+            })
             .then(() => dispatch(setIntegrationReady(calendarType)))
             .then(() => dispatch(updateProfile(calendarType)))
             .then(() => dispatch(refreshCalendar()))

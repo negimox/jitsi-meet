@@ -1,91 +1,103 @@
-import { Theme } from '@mui/material';
-import React, { Component } from 'react';
-import { WithTranslation } from 'react-i18next';
-import { connect } from 'react-redux';
-import { withStyles } from 'tss-react/mui';
+import { Theme } from "@mui/material";
+import React, { Component, ReactNode } from "react";
+import { WithTranslation } from "react-i18next";
+import { connect } from "react-redux";
+import { withStyles } from "tss-react/mui";
 
-import { IReduxState, IStore } from '../../../app/types';
-import { translate } from '../../../base/i18n/functions';
-import { withPixelLineHeight } from '../../../base/styles/functions.web';
-import Button from '../../../base/ui/components/web/Button';
-import Spinner from '../../../base/ui/components/web/Spinner';
-import { bootstrapCalendarIntegration, clearCalendarIntegration, signIn } from '../../../calendar-sync/actions';
-import MicrosoftSignInButton from '../../../calendar-sync/components/MicrosoftSignInButton';
-import { CALENDAR_TYPE } from '../../../calendar-sync/constants';
-import { isCalendarEnabled } from '../../../calendar-sync/functions';
-import GoogleSignInButton from '../../../google-api/components/GoogleSignInButton';
-import logger from '../../logger';
+import { IReduxState, IStore } from "../../../app/types";
+import { translate } from "../../../base/i18n/functions";
+import { withPixelLineHeight } from "../../../base/styles/functions.web";
+import Button from "../../../base/ui/components/web/Button";
+import Spinner from "../../../base/ui/components/web/Spinner";
+import {
+  bootstrapCalendarIntegration,
+  clearCalendarIntegration,
+  signIn,
+} from "../../../calendar-sync/actions";
+import MicrosoftSignInButton from "../../../calendar-sync/components/MicrosoftSignInButton";
+import { CALENDAR_TYPE } from "../../../calendar-sync/constants";
+import { isCalendarEnabled } from "../../../calendar-sync/functions";
+import GoogleSignInButton from "../../../google-api/components/GoogleSignInButton";
+import logger from "../../logger";
+
+// Add imports for CalDAV components
+import CalDAVSignInButton from "../../../calendar-sync/components/CalDAVSignInButton";
+import { openDialog } from "../../../base/dialog/actions";
+import CalDAVSignInDialog from "../../../calendar-sync/components/CalDAVSignInDialog";
 
 /**
  * The type of the React {@code Component} props of {@link CalendarTab}.
  */
 interface IProps extends WithTranslation {
+  /**
+   * The name given to this Jitsi Application.
+   */
+  _appName: string;
 
-    /**
-     * The name given to this Jitsi Application.
-     */
-    _appName: string;
+  /**
+   * Whether or not to display a button to sign in to Google.
+   */
+  _enableGoogleIntegration: boolean;
 
-    /**
-     * Whether or not to display a button to sign in to Google.
-     */
-    _enableGoogleIntegration: boolean;
+  /**
+   * Whether or not to display a button to sign in to Microsoft.
+   */
+  _enableMicrosoftIntegration: boolean;
 
-    /**
-     * Whether or not to display a button to sign in to Microsoft.
-     */
-    _enableMicrosoftIntegration: boolean;
+  /**
+   * Whether or not to display a button to connect to a CalDAV calendar.
+   */
+  _enableCalDAVIntegration: boolean;
 
-    /**
-     * The current calendar integration in use, if any.
-     */
-    _isConnectedToCalendar: boolean;
+  /**
+   * The current calendar integration in use, if any.
+   */
+  _isConnectedToCalendar: boolean;
 
-    /**
-     * The email address associated with the calendar integration in use.
-     */
-    _profileEmail?: string;
+  /**
+   * The email address associated with the calendar integration in use.
+   */
+  _profileEmail?: string;
 
-    /**
-     * CSS classes object.
-     */
-    classes?: Partial<Record<keyof ReturnType<typeof styles>, string>>;
+  /**
+   * CSS classes object.
+   */
+  classes?: Partial<Record<keyof ReturnType<typeof styles>, string>>;
 
-    /**
-     * Invoked to change the configured calendar integration.
-     */
-    dispatch: IStore['dispatch'];
+  /**
+   * Invoked to change the configured calendar integration.
+   */
+  dispatch: IStore["dispatch"];
 }
 
 /**
  * The type of the React {@code Component} state of {@link CalendarTab}.
  */
 interface IState {
-
-    /**
-     * Whether or not any third party APIs are being loaded.
-     */
-    loading: boolean;
+  /**
+   * Whether or not any third party APIs are being loaded.
+   */
+  loading: boolean;
 }
 
 const styles = (theme: Theme) => {
-    return {
-        container: {
-            width: '100%',
-            display: 'flex',
-            flexDirection: 'column' as const,
-            alignItems: 'center',
-            justifyContent: 'center',
-            textAlign: 'center',
-            minHeight: '100px',
-            color: theme.palette.text01,
-            ...withPixelLineHeight(theme.typography.bodyShortRegular)
-        },
+  return {
+    container: {
+      width: "100%",
+      display: "flex",
+      flexDirection: "column" as const,
+      alignItems: "center",
+      justifyContent: "center",
+      textAlign: "center",
+      minHeight: "100px",
+      color: theme.palette.text01,
+      ...withPixelLineHeight(theme.typography.bodyShortRegular),
+    },
 
-        button: {
-            marginTop: theme.spacing(4)
-        }
-    };
+    button: {
+      marginTop: theme.spacing(4),
+    },
+  };
 };
 
 /**
@@ -94,182 +106,198 @@ const styles = (theme: Theme) => {
  * @augments Component
  */
 class CalendarTab extends Component<IProps, IState> {
-    /**
-     * Initializes a new {@code CalendarTab} instance.
-     *
-     * @inheritdoc
-     */
-    constructor(props: IProps) {
-        super(props);
+  /**
+   * Initializes a new {@code CalendarTab} instance.
+   *
+   * @inheritdoc
+   */
+  constructor(props: IProps) {
+    super(props);
 
-        this.state = {
-            loading: true
-        };
+    this.state = {
+      loading: true,
+    };
 
-        // Bind event handlers so they are only bound once for every instance.
-        this._onClickDisconnect = this._onClickDisconnect.bind(this);
-        this._onClickGoogle = this._onClickGoogle.bind(this);
-        this._onClickMicrosoft = this._onClickMicrosoft.bind(this);
+    // Bind event handlers so they are only bound once for every instance.
+    this._onClickDisconnect = this._onClickDisconnect.bind(this);
+    this._onClickGoogle = this._onClickGoogle.bind(this);
+    this._onClickMicrosoft = this._onClickMicrosoft.bind(this);
+    this._onClickCalDAV = this._onClickCalDAV.bind(this);
+  }
+
+  /**
+   * Loads third party APIs as needed and bootstraps the initial calendar
+   * state if not already set.
+   *
+   * @inheritdoc
+   */
+  override componentDidMount() {
+    this.props
+      .dispatch(bootstrapCalendarIntegration())
+      .catch((err: any) => logger.error("CalendarTab bootstrap failed", err))
+      .then(() => this.setState({ loading: false }));
+  }
+
+  /**
+   * Implements React's {@link Component#render()}.
+   *
+   * @inheritdoc
+   * @returns {ReactElement}
+   */
+  override render() {
+    const classes = withStyles.getClasses(this.props);
+    let view;
+
+    if (this.state.loading) {
+      view = this._renderLoadingState();
+    } else if (this.props._isConnectedToCalendar) {
+      view = this._renderSignOutState();
+    } else {
+      view = this._renderSignInState();
     }
 
-    /**
-     * Loads third party APIs as needed and bootstraps the initial calendar
-     * state if not already set.
-     *
-     * @inheritdoc
-     */
-    override componentDidMount() {
-        this.props.dispatch(bootstrapCalendarIntegration())
-            .catch((err: any) => logger.error('CalendarTab bootstrap failed', err))
-            .then(() => this.setState({ loading: false }));
-    }
+    return <div className={classes.container}>{view}</div>;
+  }
 
-    /**
-     * Implements React's {@link Component#render()}.
-     *
-     * @inheritdoc
-     * @returns {ReactElement}
-     */
-    override render() {
-        const classes = withStyles.getClasses(this.props);
-        let view;
+  /**
+   * Dispatches the action to start the sign in flow for a given calendar
+   * integration type.
+   *
+   * @param {string} type - The calendar type to try integrating with.
+   * @private
+   * @returns {void}
+   */
+  _attemptSignIn(type: string) {
+    this.props.dispatch(signIn(type));
+  }
 
-        if (this.state.loading) {
-            view = this._renderLoadingState();
-        } else if (this.props._isConnectedToCalendar) {
-            view = this._renderSignOutState();
-        } else {
-            view = this._renderSignInState();
-        }
+  /**
+   * Dispatches an action to sign out of the currently connected third party
+   * used for calendar integration.
+   *
+   * @private
+   * @returns {void}
+   */
+  _onClickDisconnect() {
+    // We clear the integration state instead of actually signing out. This
+    // is for two primary reasons. Microsoft does not support a sign out and
+    // instead relies on clearing of local auth data. Google signout can
+    // also sign the user out of YouTube. So for now we've decided not to
+    // do an actual sign out.
+    this.props.dispatch(clearCalendarIntegration());
+  }
 
-        return (
-            <div className = { classes.container }>
-                { view }
-            </div>
-        );
-    }
+  /**
+   * Starts the sign in flow for Google calendar integration.
+   *
+   * @private
+   * @returns {void}
+   */
+  _onClickGoogle() {
+    this._attemptSignIn(CALENDAR_TYPE.GOOGLE);
+  }
 
-    /**
-     * Dispatches the action to start the sign in flow for a given calendar
-     * integration type.
-     *
-     * @param {string} type - The calendar type to try integrating with.
-     * @private
-     * @returns {void}
-     */
-    _attemptSignIn(type: string) {
-        this.props.dispatch(signIn(type));
-    }
+  /**
+   * Starts the sign in flow for Microsoft calendar integration.
+   *
+   * @private
+   * @returns {void}
+   */
+  _onClickMicrosoft() {
+    this._attemptSignIn(CALENDAR_TYPE.MICROSOFT);
+  }
 
-    /**
-     * Dispatches an action to sign out of the currently connected third party
-     * used for calendar integration.
-     *
-     * @private
-     * @returns {void}
-     */
-    _onClickDisconnect() {
-        // We clear the integration state instead of actually signing out. This
-        // is for two primary reasons. Microsoft does not support a sign out and
-        // instead relies on clearing of local auth data. Google signout can
-        // also sign the user out of YouTube. So for now we've decided not to
-        // do an actual sign out.
-        this.props.dispatch(clearCalendarIntegration());
-    }
+  /**
+   * Starts the sign in flow for CalDAV calendar integration.
+   *
+   * @private
+   * @returns {void}
+   */
+  _onClickCalDAV() {
+    this.props.dispatch(openDialog(CalDAVSignInDialog));
+  }
 
-    /**
-     * Starts the sign in flow for Google calendar integration.
-     *
-     * @private
-     * @returns {void}
-     */
-    _onClickGoogle() {
-        this._attemptSignIn(CALENDAR_TYPE.GOOGLE);
-    }
+  /**
+   * Render a React Element to indicate third party APIs are being loaded.
+   *
+   * @private
+   * @returns {ReactElement}
+   */
+  _renderLoadingState() {
+    return <Spinner />;
+  }
 
-    /**
-     * Starts the sign in flow for Microsoft calendar integration.
-     *
-     * @private
-     * @returns {void}
-     */
-    _onClickMicrosoft() {
-        this._attemptSignIn(CALENDAR_TYPE.MICROSOFT);
-    }
+  /**
+   * Render a React Element to sign into a third party for calendar
+   * integration.
+   *
+   * @private
+   * @returns {ReactElement}
+   */
+  _renderSignInState() {
+    const {
+      _appName,
+      _enableGoogleIntegration,
+      _enableMicrosoftIntegration,
+      _enableCalDAVIntegration,
+      t,
+    } = this.props;
+    const classes = withStyles.getClasses(this.props);
 
-    /**
-     * Render a React Element to indicate third party APIs are being loaded.
-     *
-     * @private
-     * @returns {ReactElement}
-     */
-    _renderLoadingState() {
-        return (
-            <Spinner />
-        );
-    }
+    return (
+      <>
+        <p>{t("settings.calendar.about", { appName: _appName || "" })}</p>
+        {_enableGoogleIntegration && (
+          <div className={classes.button}>
+            <GoogleSignInButton
+              onClick={this._onClickGoogle}
+              text={t("liveStreaming.signIn")}
+            />
+          </div>
+        )}
+        {_enableMicrosoftIntegration && (
+          <div className={classes.button}>
+            <MicrosoftSignInButton
+              onClick={this._onClickMicrosoft}
+              text={t("settings.calendar.microsoftSignIn")}
+            />
+          </div>
+        )}
+        {_enableCalDAVIntegration && (
+          <div className={classes.button}>
+            <CalDAVSignInButton
+              onClick={this._onClickCalDAV}
+              text={t("settings.calendar.caldavSignIn")}
+            />
+          </div>
+        )}
+      </>
+    );
+  }
 
-    /**
-     * Render a React Element to sign into a third party for calendar
-     * integration.
-     *
-     * @private
-     * @returns {ReactElement}
-     */
-    _renderSignInState() {
-        const {
-            _appName,
-            _enableGoogleIntegration,
-            _enableMicrosoftIntegration,
-            t
-        } = this.props;
-        const classes = withStyles.getClasses(this.props);
+  /**
+   * Render a React Element to sign out of the currently connected third
+   * party used for calendar integration.
+   *
+   * @private
+   * @returns {ReactElement}
+   */
+  _renderSignOutState() {
+    const { _profileEmail, t } = this.props;
+    const classes = withStyles.getClasses(this.props);
 
-        return (
-            <>
-                <p>
-                    { t('settings.calendar.about',
-                        { appName: _appName || '' }) }
-                </p>
-                { _enableGoogleIntegration
-                    && <div className = { classes.button }>
-                        <GoogleSignInButton
-                            onClick = { this._onClickGoogle }
-                            text = { t('liveStreaming.signIn') } />
-                    </div> }
-                { _enableMicrosoftIntegration
-                    && <div className = { classes.button }>
-                        <MicrosoftSignInButton
-                            onClick = { this._onClickMicrosoft }
-                            text = { t('settings.calendar.microsoftSignIn') } />
-                    </div> }
-            </>
-        );
-    }
-
-    /**
-     * Render a React Element to sign out of the currently connected third
-     * party used for calendar integration.
-     *
-     * @private
-     * @returns {ReactElement}
-     */
-    _renderSignOutState() {
-        const { _profileEmail, t } = this.props;
-        const classes = withStyles.getClasses(this.props);
-
-        return (
-            <>
-                { t('settings.calendar.signedIn',
-                        { email: _profileEmail }) }
-                <Button
-                    className = { classes.button }
-                    id = 'calendar_logout'
-                    label = { t('settings.calendar.disconnect') }
-                    onClick = { this._onClickDisconnect } />
-            </>
-        );
-    }
+    return (
+      <>
+        {t("settings.calendar.signedIn", { email: _profileEmail })}
+        <Button
+          className={classes.button}
+          id="calendar_logout"
+          label={t("settings.calendar.disconnect")}
+          onClick={this._onClickDisconnect}
+        />
+      </>
+    );
+  }
 }
 
 /**
@@ -287,22 +315,31 @@ class CalendarTab extends Component<IProps, IState> {
  * }}
  */
 function _mapStateToProps(state: IReduxState) {
-    const calendarState = state['features/calendar-sync'] || {};
-    const {
-        googleApiApplicationClientID,
-        microsoftApiApplicationClientID
-    } = state['features/base/config'];
-    const calendarEnabled = isCalendarEnabled(state);
+  const calendarState = state["features/calendar-sync"] || {};
+  const {
+    googleApiApplicationClientID,
+    microsoftApiApplicationClientID,
+    enableCalDAVIntegration,
+  } = state["features/base/config"];
+  const calendarEnabled = isCalendarEnabled(state);
 
-    return {
-        _appName: interfaceConfig.APP_NAME,
-        _enableGoogleIntegration: Boolean(
-            calendarEnabled && googleApiApplicationClientID),
-        _enableMicrosoftIntegration: Boolean(
-            calendarEnabled && microsoftApiApplicationClientID),
-        _isConnectedToCalendar: calendarState.integrationReady,
-        _profileEmail: calendarState.profileEmail
-    };
+  return {
+    _appName: interfaceConfig.APP_NAME,
+    _enableGoogleIntegration: Boolean(
+      calendarEnabled && googleApiApplicationClientID
+    ),
+    _enableMicrosoftIntegration: Boolean(
+      calendarEnabled && microsoftApiApplicationClientID
+    ),
+    _enableCalDAVIntegration: Boolean(
+      calendarEnabled && enableCalDAVIntegration
+    ),
+    _isConnectedToCalendar: calendarState.integrationReady,
+    _profileEmail: calendarState.profileEmail,
+  };
 }
 
-export default withStyles(translate(connect(_mapStateToProps)(CalendarTab)), styles);
+export default withStyles(
+  translate(connect(_mapStateToProps)(CalendarTab)),
+  styles
+);

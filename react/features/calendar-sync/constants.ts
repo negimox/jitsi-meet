@@ -5,7 +5,8 @@
  */
 export const CALENDAR_TYPE = {
     GOOGLE: 'google',
-    MICROSOFT: 'microsoft'
+    MICROSOFT: 'microsoft',
+    CALDAV: 'caldav'
 };
 
 /**

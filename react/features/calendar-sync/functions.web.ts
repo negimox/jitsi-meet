@@ -1,6 +1,7 @@
 import { IStore } from '../app/types';
 import { IStateful } from '../base/app/types';
 import { toState } from '../base/redux/functions';
+import { caldavCalendarApi } from './web/caldavCalendar';
 
 import {
     clearCalendarIntegration,
@@ -110,5 +111,9 @@ export function _getCalendarIntegration(calendarType: string) {
         return googleCalendarApi;
     case CALENDAR_TYPE.MICROSOFT:
         return microsoftCalendarApi;
+    case CALENDAR_TYPE.CALDAV:
+        return caldavCalendarApi;
+
     }
+
 }
