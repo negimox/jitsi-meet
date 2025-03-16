@@ -36,17 +36,31 @@ interface IProps {
  */
 function PermissionRequestDialog({ dispatch, onPermissionHandled, t }: IProps) {
   const handleClick = () => {
-    // This function is executed as a direct result of a user click,
-    // so Chrome will show the permission prompt
-    dispatch(
-      createLocalTracksA({
-        devices: [MEDIA_TYPE.AUDIO, MEDIA_TYPE.VIDEO],
-      })
-    );
+    // Direct browser API call to ensure prompt appears - this is crucial for Chrome
+    navigator.mediaDevices
+      .getUserMedia({ audio: true, video: true })
+      .then((stream) => {
+        // Stop the tracks once we've gotten permission to free up the devices
+        stream.getTracks().forEach((track) => track.stop());
 
-    onPermissionHandled();
+        // Now that we have permission, we can dispatch the original action
+        // which will now work correctly
+        dispatch(
+          createLocalTracksA({
+            devices: [MEDIA_TYPE.AUDIO, MEDIA_TYPE.VIDEO],
+          })
+        );
+
+        onPermissionHandled();
+      })
+      .catch((error) => {
+        console.error("Permission request failed:", error);
+        // Still call onPermissionHandled so the user isn't stuck
+        onPermissionHandled();
+      });
   };
 
+  // Rest of the component remains the same
   return (
     <div
       style={{
