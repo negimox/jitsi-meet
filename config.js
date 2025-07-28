@@ -9,17 +9,20 @@ var subdir = '<!--# echo var="subdir" default="" -->';
 var subdomain = '<!--# echo var="subdomain" default="" -->';
 
 if (subdomain) {
-    subdomain = subdomain.substr(0, subdomain.length - 1).split('.')
-        .join('_')
-        .toLowerCase() + '.';
+    subdomain =
+        subdomain
+            .substr(0, subdomain.length - 1)
+            .split(".")
+            .join("_")
+            .toLowerCase() + ".";
 }
 
 // In case of no ssi provided by the webserver, use empty strings
-if (subdir.startsWith('<!--')) {
-    subdir = '';
+if (subdir.startsWith("<!--")) {
+    subdir = "";
 }
-if (subdomain.startsWith('<!--')) {
-    subdomain = '';
+if (subdomain.startsWith("<!--")) {
+    subdomain = "";
 }
 
 var enableJaaS = false;
@@ -30,28 +33,28 @@ var config = {
 
     hosts: {
         // XMPP domain.
-        domain: 'jitsi-meet.example.com',
+        domain: "192.99.24.50",
 
         // When using authentication, domain for guest users.
         // anonymousdomain: 'guest.example.com',
 
         // Domain for authenticated users. Defaults to <domain>.
-        // authdomain: 'jitsi-meet.example.com',
+        // authdomain: '192.99.24.50',
 
         // Focus component domain. Defaults to focus.<domain>.
-        // focus: 'focus.jitsi-meet.example.com',
+        // focus: 'focus.192.99.24.50',
 
         // XMPP MUC domain. FIXME: use XEP-0030 to discover it.
-        muc: 'conference.' + subdomain + 'jitsi-meet.example.com',
+        muc: "conference." + subdomain + "192.99.24.50",
     },
 
     // BOSH URL. FIXME: use XEP-0156 to discover it.
-    bosh: 'https://jitsi-meet.example.com/' + subdir + 'http-bind',
+    bosh: "https://192.99.24.50/" + subdir + "http-bind",
 
     // Websocket URL (XMPP)
-    websocket: 'wss://jitsi-meet.example.com/' + subdir + 'xmpp-websocket',
+    websocket: "wss://192.99.24.50/" + subdir + "xmpp-websocket",
 
-    // websocketKeepAliveUrl: 'https://jitsi-meet.example.com/' + subdir + '_unlock',
+    // websocketKeepAliveUrl: 'https://192.99.24.50/' + subdir + '_unlock',
 
     // Whether BOSH should be preferred over WebSocket if both are configured.
     // preferBosh: false,
@@ -59,11 +62,11 @@ var config = {
     // The real JID of focus participant - can be overridden here
     // Do not change username - FIXME: Make focus username configurable
     // https://github.com/jitsi/jitsi-meet/issues/7376
-    // focusUserJid: 'focus@auth.jitsi-meet.example.com',
+    // focusUserJid: 'focus@auth.192.99.24.50',
 
     // Option to send conference requests to jicofo over http (requires nginx rule for it)
     // conferenceRequestUrl:
-    //   'https://<!--# echo var="http_host" default="jitsi-meet.example.com" -->/' + subdir + 'conference-request/v1',
+    //   'https://<!--# echo var="http_host" default="192.99.24.50" -->/' + subdir + 'conference-request/v1',
 
     // Options related to the bridge (colibri) data channel
     bridgeChannel: {
@@ -72,7 +75,6 @@ var config = {
         // which does not match ignoreDomain, falling back to the first one that matches
         // ignoreDomain. Has no effect if undefined.
         // ignoreDomain: 'example.com',
-
         // Prefer SCTP (WebRTC data channels over the media path) over a colibri websocket.
         // If SCTP is available in the backend it will be used instead of a WS. Defaults to
         // false (SCTP is used only if available and no WS are available).
@@ -85,43 +87,28 @@ var config = {
     testing: {
         // Allows the setting of a custom bandwidth value from the UI.
         // assumeBandwidth: true,
-
         // Enables use of getDisplayMedia in electron
         // electronUseGetDisplayMedia: false,
-
         // Enables AV1 codec for FF. Note: By default it is disabled.
         // enableAV1ForFF: false,
-
         // Enables the use of the codec selection API supported by the browsers .
         // enableCodecSelectionAPI: false,
-
         // P2P test mode disables automatic switching to P2P when there are 2
         // participants in the conference.
         // p2pTestMode: false,
-
         // Enables the test specific features consumed by jitsi-meet-torture
         // testMode: false,
-
         // Disables the auto-play behavior of *all* newly created video element.
         // This is useful when the client runs on a host with limited resources.
         // noAutoPlayVideo: false,
-
         // Experiment: Whether to skip interim transcriptions.
         // skipInterimTranscriptions: false,
-
         // Dump transcripts to a <transcript> element for debugging.
         // dumpTranscript: false,
-
         // Log the audio levels.
         // debugAudioLevels: true,
-
         // Will replace ice candidates IPs with invalid ones in order to fail ice.
         // failICE: true,
-
-        // When running on Spot TV, this controls whether to show the recording consent dialog.
-        // If false (default), Spot instances will not show the recording consent dialog.
-        // If true, Spot instances will show the recording consent dialog like regular clients.
-        // showSpotConsentDialog: false,
     },
 
     // Disables moderator indicators.
@@ -166,7 +153,6 @@ var config = {
     // Disables ICE/TCP by filtering out local and remote TCP candidates in
     // signalling.
     // webrtcIceTcpDisable: false,
-
 
     // Media
     //
@@ -389,9 +375,9 @@ var config = {
     //     appKey: '<APP_KEY>', // Specify your app key here.
     //     // A URL to redirect the user to, after authenticating
     //     // by default uses:
-    //     // 'https://jitsi-meet.example.com/static/oauth.html'
+    //     // 'https://192.99.24.50/static/oauth.html'
     //     redirectURI:
-    //          'https://jitsi-meet.example.com/subfolder/static/oauth.html',
+    //          'https://192.99.24.50/subfolder/static/oauth.html',
     // },
 
     // configuration for all things recording related. Existing settings will be migrated here in the future.
@@ -415,21 +401,22 @@ var config = {
     //    // consentLearnMoreLink: 'https://jitsi.org/meet/consent',
     // },
 
-    // recordingService: {
-    //     // When integrations like dropbox are enabled only that will be shown,
-    //     // by enabling fileRecordingsServiceEnabled, we show both the integrations
-    //     // and the generic recording service (its configuration and storage type
-    //     // depends on jibri configuration)
-    //     enabled: false,
+    recordingService: {
+        //     // When integrations like dropbox are enabled only that will be shown,
+        //     // by enabling fileRecordingsServiceEnabled, we show both the integrations
+        //     // and the generic recording service (its configuration and storage type
+        //     // depends on jibri configuration)
+        enabled: true,
+        mode: "jibri",
 
-    //     // Whether to show the possibility to share file recording with other people
-    //     // (e.g. meeting participants), based on the actual implementation
-    //     // on the backend.
-    //     sharingEnabled: false,
+        //     // Whether to show the possibility to share file recording with other people
+        //     // (e.g. meeting participants), based on the actual implementation
+        //     // on the backend.
+        //     sharingEnabled: false,
 
-    //     // Hide the warning that says we only store the recording for 24 hours.
-    //     hideStorageWarning: false,
-    // },
+        //     // Hide the warning that says we only store the recording for 24 hours.
+        //     hideStorageWarning: false,
+    },
 
     // DEPRECATED. Use recordingService.enabled instead.
     // fileRecordingsServiceEnabled: false,
@@ -516,8 +503,7 @@ var config = {
     //     // Note: Starting transcriptions from the recording dialog will still work.
     //     disableClosedCaptions: false,
 
-    //     // Whether to invite jigasi when backend transcriptions are enabled (asyncTranscription is true in metadata).
-    //     // By default, we invite it.
+    //     // Whether to invite jigasi when backend transcriptions are enabled. By default, we invite it.
     //     inviteJigasiOnBackendTranscribing: true,
     // },
 
@@ -1076,7 +1062,6 @@ var config = {
     // will not function.
     // disableThirdPartyRequests: false,
 
-
     // Peer-To-Peer mode: used (if enabled) when there are just 2 participants.
     //
 
@@ -1114,31 +1099,25 @@ var config = {
 
         // The STUN servers that will be used in the peer to peer connections
         stunServers: [
-
-            // { urls: 'stun:jitsi-meet.example.com:3478' },
-            { urls: 'stun:meet-jit-si-turnrelay.jitsi.net:443' },
+            // { urls: 'stun:192.99.24.50:3478' },
+            { urls: "stun:meet-jit-si-turnrelay.jitsi.net:443" },
         ],
     },
 
     analytics: {
         // True if the analytics should be disabled
         // disabled: false,
-
         // Matomo configuration:
         // matomoEndpoint: 'https://your-matomo-endpoint/',
         // matomoSiteID: '42',
-
         // The Amplitude APP Key:
         // amplitudeAPPKey: '<APP_KEY>',
-
         // Enables Amplitude UTM tracking:
         // Default value is false.
         // amplitudeIncludeUTM: false,
-
         // Obfuscates room name sent to analytics (amplitude, rtcstats)
         // Default value is false.
         // obfuscateRoomName: false,
-
         // Configuration for the rtcstats server:
         // By enabling rtcstats server every time a conference is joined the rtcstats
         // module connects to the provided rtcstatsEndpoint and sends statistics regarding
@@ -1146,24 +1125,19 @@ var config = {
         // interval.
         // rtcstatsEnabled: false,
         // rtcstatsStoreLogs: false,
-
         // In order to enable rtcstats one needs to provide a endpoint url.
         // rtcstatsEndpoint: wss://rtcstats-server-pilot.jitsi.net/,
-
         // The interval at which rtcstats will poll getStats, defaults to 10000ms.
         // If the value is set to 0 getStats won't be polled and the rtcstats client
         // will only send data related to RTCPeerConnection events.
         // rtcstatsPollInterval: 10000,
-
         // This determines if rtcstats sends the SDP to the rtcstats server or replaces
         // all SDPs with an empty string instead.
         // rtcstatsSendSdp: false,
-
         // Array of script URLs to load as lib-jitsi-meet "analytics handlers".
         // scriptURLs: [
         //      "https://example.com/my-custom-analytics.js",
         // ],
-
         // By enabling watchRTCEnabled option you would want to use watchRTC feature
         // This would also require to configure watchRTCConfigParams.
         // Please remember to keep rtcstatsEnabled disabled for watchRTC to work.
@@ -1365,11 +1339,18 @@ var config = {
     //     disableKick: true,
     //     // If set to true the 'Grant moderator' button will be disabled.
     //     disableGrantModerator: true,
-    //     // If set to 'all' the 'Private chat' button will be disabled for all participants.
-    //     // If set to 'allow-moderator-chat' the 'Private chat' button will be available for chats with moderators.
-    //     disablePrivateChat: 'all' | 'allow-moderator-chat',
+    //     // If set to true the 'Send private message' button will be disabled.
+    //     disablePrivateChat: true,
     // },
 
+    // Endpoint that enables support for salesforce integration with in-meeting resource linking
+    // This is required for:
+    // listing the most recent records - salesforceUrl/records/recents
+    // searching records - salesforceUrl/records?text=${text}
+    // retrieving record details - salesforceUrl/records/${id}?type=${type}
+    // and linking the meeting - salesforceUrl/sessions/${sessionId}/records/${id}
+    //
+    // salesforceUrl: 'https://api.example.com/',
 
     // If set to true all muting operations of remote participants will be disabled.
     // disableRemoteMute: true,
@@ -1394,13 +1375,6 @@ var config = {
         logoClickUrl: 'https://example-company.org',
         // The url used for the image used as logo
         logoImageUrl: 'https://example.com/logo-img.png',
-        // Endpoint that enables support for salesforce integration with in-meeting resource linking
-        // This is required for:
-        // listing the most recent records - salesforceUrl/records/recents
-        // searching records - salesforceUrl/records?text=${text}
-        // retrieving record details - salesforceUrl/records/${id}?type=${type}
-        // and linking the meeting - salesforceUrl/sessions/${sessionId}/records/${id}
-        // salesforceUrl: 'https://api.example.com/',
         // Overwrite for pool of background images for avatars
         avatarBackgrounds: ['url(https://example.com/avatar-background-1.png)', '#FFF'],
         // The lobby/prejoin screen background
@@ -1493,7 +1467,7 @@ var config = {
     // The URL of the moderated rooms microservice, if available. If it
     // is present, a link to the service will be rendered on the welcome page,
     // otherwise the app doesn't render it.
-    // moderatedRoomServiceUrl: 'https://moderated.jitsi-meet.example.com',
+    // moderatedRoomServiceUrl: 'https://moderated.192.99.24.50',
 
     // If true, tile view will not be enabled automatically when the participants count threshold is reached.
     // disableTileView: true,
@@ -1597,7 +1571,6 @@ var config = {
     // For external entities (e. g. email), the localStorage key holding the token value for directory authentication
     // peopleSearchTokenLocation: "mytoken",
 
-
     // Options related to visitors.
     // visitors: {
     //     // Starts audio/video when the participant is promoted from visitor.
@@ -1663,7 +1636,7 @@ var config = {
      websocketKeepAlive
      websocketKeepAliveUrl
      */
-
+    hiddenDomain: "recorder.192.99.24.50",
     /**
      * Default interval (milliseconds) for triggering mouseMoved iframe API event
      */
@@ -1784,13 +1757,6 @@ var config = {
     //     // The minimum number of participants that must be in the call for
     //     // the top panel layout to be used.
     //     minParticipantCountForTopPanel: 50,
-
-    //     // The width of the filmstrip on joining meeting. Can be resized afterwards.
-    //     initialWidth: 400,
-
-    //     // Whether the draggable resize bar of the filmstrip is always visible. Setting this to true will make
-    //     // the filmstrip always visible in case `disableResizable` is false.
-    //     alwaysShowResizeBar: true,
     // },
 
     // Tile view related config options.
@@ -1906,7 +1872,7 @@ var config = {
 
 // Set the default values for JaaS customers
 if (enableJaaS) {
-    config.dialInNumbersUrl = 'https://conference-mapper.jitsi.net/v1/access/dids';
-    config.dialInConfCodeUrl = 'https://conference-mapper.jitsi.net/v1/access';
+    config.dialInNumbersUrl = "https://conference-mapper.jitsi.net/v1/access/dids";
+    config.dialInConfCodeUrl = "https://conference-mapper.jitsi.net/v1/access";
     config.roomPasswordNumberOfDigits = 10; // skip re-adding it (do not remove comment)
 }
