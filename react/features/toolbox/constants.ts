@@ -32,11 +32,11 @@ export const THRESHOLDS = [
     },
     {
         width: 565,
-        order: [ 'microphone', 'camera', 'desktop', 'chat', 'raisehand', 'reactions', 'participants-pane', 'tileview' ]
+        order: [ 'microphone', 'camera', 'desktop', 'chat', 'raisehand', 'reactions', 'participants-pane', 'spokenlanguage' ]
     },
     {
         width: 520,
-        order: [ 'microphone', 'camera', 'desktop', 'chat', 'raisehand', 'participants-pane', 'tileview' ]
+        order: [ 'microphone', 'camera', 'desktop', 'chat', 'raisehand', 'participants-pane', 'spokenlanguage' ]
     },
     {
         width: 470,
@@ -179,6 +179,7 @@ export const TOOLBAR_BUTTONS: ToolbarButton[] = [
     'noisesuppression',
     'sharedvideo',
     'shortcuts',
+    'spokenlanguage',
     'stats',
     'tileview',
     'toggle-camera',

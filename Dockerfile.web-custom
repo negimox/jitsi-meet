@@ -1,0 +1,12 @@
+# Start with the stable image we were using to keep all the scripts/configs working
+FROM jitsi/web:stable-10710
+
+# Clean out the existing static files to avoid conflicts
+RUN rm -rf /usr/share/jitsi-meet/*
+
+# Copy your local compiled build artifacts into the container
+# We assume the build context will be the parent directory or mapped correctly
+COPY jitsi-meet/ /usr/share/jitsi-meet/
+
+# Ensure permissions are correct (nginx needs to read them)
+RUN chown -R root:root /usr/share/jitsi-meet/

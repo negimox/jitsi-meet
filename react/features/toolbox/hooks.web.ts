@@ -54,6 +54,7 @@ import SpeakerStats from '../speaker-stats/components/web/SpeakerStats';
 import { isSpeakerStatsDisabled } from '../speaker-stats/functions';
 import { useSpeakerStatsButton } from '../speaker-stats/hooks.web';
 import { useClosedCaptionButton } from '../subtitles/hooks.web';
+import { useSpokenLanguageButton } from '../translation/hooks.web';
 import { toggleTileView } from '../video-layout/actions.any';
 import { shouldDisplayTileView } from '../video-layout/functions.web';
 import { useTileViewButton } from '../video-layout/hooks';
@@ -294,6 +295,7 @@ export function useToolboxButtons(
     const _download = useDownloadButton();
     const _help = useHelpButton();
     const customPanel = useCustomPanelButton();
+    const spoken = useSpokenLanguageButton();
 
     const buttons: { [key in ToolbarButton]?: IToolboxButton; } = {
         microphone,
@@ -319,6 +321,7 @@ export function useToolboxButtons(
         sharedvideo: shareVideo,
         shareaudio,
         noisesuppression: noiseSuppression,
+        spokenlanguage: spoken,
         whiteboard,
         etherpad,
         'select-background': virtualBackground,

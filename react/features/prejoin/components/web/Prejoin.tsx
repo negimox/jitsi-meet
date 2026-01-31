@@ -22,6 +22,7 @@ import { BUTTON_TYPES } from '../../../base/ui/constants.any';
 import isInsecureRoomName from '../../../base/util/isInsecureRoomName';
 import { openDisplayNamePrompt } from '../../../display-name/actions';
 import { isUnsafeRoomWarningEnabled } from '../../../prejoin/functions';
+import SpokenLanguageSelector from '../../../translation/components/web/SpokenLanguageSelector';
 import {
     joinConference as joinConferenceAction,
     joinConferenceWithoutAudio as joinConferenceWithoutAudioAction,
@@ -434,6 +435,8 @@ const Prejoin = ({
                         {isDisplayNameVisible && <div className = { classes.avatarName }>{name}</div>}
                     </div>
                 )}
+
+                <SpokenLanguageSelector />
 
                 {showErrorOnField && <div
                     className = { classes.error }

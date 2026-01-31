@@ -1535,6 +1535,26 @@
         "tr": "TR",
         "translateTo": "Translate to"
     },
+    "translation": {
+        "languages": {
+            "en": "English",
+            "hi": "Hindi"
+        },
+        "notInConference": "You are not currently in a conference.",
+        "spokenLanguage": "My Spoken Language",
+        "spokenLanguageDialogDescription": "Select the language you will be speaking in the call. This helps others receive accurate translations.",
+        "spokenLanguageDialogTitle": "Spoken Language",
+        "spokenLanguageLabel": "I speak:",
+        "spokenLanguageTooltip": "Select the language you speak",
+        "subscriptionFailed": "Translation subscription failed",
+        "subscriptionFailedDescription": "Could not subscribe to translator audio. Please try again.",
+        "subscriptionSuccess": "Translation enabled",
+        "subscriptionSuccessDescription": "You are now receiving {{language}} translations.",
+        "translatorFound": "Translator available",
+        "translatorFoundDescription": "{{language}} translator is available in this meeting.",
+        "translatorNotFound": "Translator not available",
+        "translatorNotFoundDescription": "No {{language}} translator is currently in this meeting. Translation will be available when a translator joins."
+    },
     "unpinParticipant": "{{participantName}} - Unpin",
     "userMedia": {
         "grantPermissions": "Please grant permissions to use your camera and microphone."
