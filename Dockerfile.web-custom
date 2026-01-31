@@ -1,12 +1,28 @@
-# Start with the stable image we were using to keep all the scripts/configs working
+# Start with the official stable image to keep all startup scripts
 FROM jitsi/web:stable-10710
 
-# Clean out the existing static files to avoid conflicts
-RUN rm -rf /usr/share/jitsi-meet/*
+# 1. Copy the heavy assets (Compiled JS, CSS, etc.)
+#    We overwrite the default folders with your 'make' output.
+COPY jitsi-meet/libs/ /usr/share/jitsi-meet/libs/
+COPY jitsi-meet/css/ /usr/share/jitsi-meet/css/
+COPY jitsi-meet/images/ /usr/share/jitsi-meet/images/
+COPY jitsi-meet/sounds/ /usr/share/jitsi-meet/sounds/
+COPY jitsi-meet/fonts/ /usr/share/jitsi-meet/fonts/
+COPY jitsi-meet/lang/ /usr/share/jitsi-meet/lang/
 
-# Copy your local compiled build artifacts into the container
-# We assume the build context will be the parent directory or mapped correctly
-COPY jitsi-meet/ /usr/share/jitsi-meet/
+# 2. Copy the HTML files (index.html, title.html, etc.)
+COPY jitsi-meet/*.html /usr/share/jitsi-meet/
+COPY jitsi-meet/*.json /usr/share/jitsi-meet/
+
+# 3. CRITICAL: Do NOT copy config.js or interface_config.js
+#    The official image creates these as symlinks to /config/ at runtime.
+#    If we copy physical files over them, the container configuration logic breaks.
+#    We delete them just in case your build folder had them, ensuring the symlinks survive.
+RUN rm -f /usr/share/jitsi-meet/config.js /usr/share/jitsi-meet/interface_config.js
+
+# 4. Copy your Phase 1 UI script (if it wasn't already in libs/)
+#    Since you built from source, custom-ui.js should technically be integrated 
+#    into the React build, but if you have extra raw scripts, copy them here.
 
 # Ensure permissions are correct (nginx needs to read them)
 RUN chown -R root:root /usr/share/jitsi-meet/
