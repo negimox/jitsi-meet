@@ -260,6 +260,21 @@ function _updateAudioSubscription(store: IStore): void {
 
     // User has explicitly selected a language — let through the matching translator.
     const spokenLanguage = getSpokenLanguage(state);
+
+    if (!spokenLanguage) {
+        // Defensive: _hasExplicitSelection is true but no language in state.
+        // Treat as "no selection" — exclude all translators.
+        const excludeSources = translators.map((t) => `${t.id}-a0`);
+
+        logger.info(`Explicit selection but no language in state, excluding all translators`);
+        (conference as any).setAudioSubscriptionMode({
+            mode: "Exclude",
+            list: excludeSources,
+        });
+
+        return;
+    }
+
     const selectedName = `${TRANSLATOR_DISPLAY_NAME_PREFIX}${spokenLanguage}`.toLowerCase();
 
     // Exclude every translator EXCEPT the one that matches the user's language.
@@ -337,6 +352,11 @@ function _notifyTranslatorArrival(store: IStore, translatorName?: string): void 
 
     const state = store.getState();
     const spokenLanguage = getSpokenLanguage(state);
+
+    if (!spokenLanguage) {
+        return;
+    }
+
     const expectedName = `${TRANSLATOR_DISPLAY_NAME_PREFIX}${spokenLanguage}`.toLowerCase();
 
     if (translatorName.toLowerCase() === expectedName) {

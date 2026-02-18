@@ -1,15 +1,16 @@
-import { IReduxState } from '../app/types';
+import { IReduxState } from "../app/types";
 
-import { SUPPORTED_SPOKEN_LANGUAGES, SpokenLanguage } from './constants';
+import { SUPPORTED_SPOKEN_LANGUAGES, SpokenLanguage } from "./constants";
 
 /**
  * Gets the currently selected spoken language from Redux state.
+ * Returns undefined if the user has not yet made an explicit selection.
  *
  * @param {IReduxState} state - The Redux state.
- * @returns {SpokenLanguage} The current spoken language code.
+ * @returns {SpokenLanguage | undefined} The current spoken language code, or undefined.
  */
-export function getSpokenLanguage(state: IReduxState): SpokenLanguage {
-    return state['features/translation']?.spokenLanguage ?? 'en';
+export function getSpokenLanguage(state: IReduxState): SpokenLanguage | undefined {
+    return state["features/translation"]?.spokenLanguage;
 }
 
 /**

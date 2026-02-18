@@ -1541,6 +1541,7 @@
             "hi": "Hindi"
         },
         "notInConference": "You are not currently in a conference.",
+        "selectLanguagePlaceholder": "-- Select Language --",
         "spokenLanguage": "My Spoken Language",
         "spokenLanguageDialogDescription": "Select the language you will be speaking in the call. This helps others receive accurate translations.",
         "spokenLanguageDialogTitle": "Spoken Language",

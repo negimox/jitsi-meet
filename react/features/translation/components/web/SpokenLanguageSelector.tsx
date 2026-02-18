@@ -1,37 +1,37 @@
-import React, { useCallback } from 'react';
-import { useTranslation } from 'react-i18next';
-import { useDispatch, useSelector } from 'react-redux';
-import { makeStyles } from 'tss-react/mui';
+import React, { useCallback } from "react";
+import { useTranslation } from "react-i18next";
+import { useDispatch, useSelector } from "react-redux";
+import { makeStyles } from "tss-react/mui";
 
-import { IReduxState } from '../../../app/types';
-import Select from '../../../base/ui/components/web/Select';
-import { setSpokenLanguage } from '../../actions.any';
-import { SUPPORTED_SPOKEN_LANGUAGES, SpokenLanguage } from '../../constants';
-import { getSpokenLanguage } from '../../functions';
+import { IReduxState } from "../../../app/types";
+import Select from "../../../base/ui/components/web/Select";
+import { setSpokenLanguage } from "../../actions.any";
+import { SUPPORTED_SPOKEN_LANGUAGES, SpokenLanguage } from "../../constants";
+import { getSpokenLanguage } from "../../functions";
 
 // Import reducer to ensure it gets registered with ReducerRegistry
-import '../../reducer';
+import "../../reducer";
 
 /**
  * Styles for the SpokenLanguageSelector component.
  */
-const useStyles = makeStyles()(theme => {
+const useStyles = makeStyles()((theme) => {
     return {
         container: {
-            display: 'flex',
-            alignItems: 'center',
+            display: "flex",
+            alignItems: "center",
             padding: theme.spacing(2),
-            gap: theme.spacing(2)
+            gap: theme.spacing(2),
         },
         select: {
             flex: 1,
-            minWidth: 150
+            minWidth: 150,
         },
         label: {
             ...theme.typography.bodyShortRegular,
             color: theme.palette.text01,
-            whiteSpace: 'nowrap'
-        }
+            whiteSpace: "nowrap",
+        },
     };
 });
 
@@ -56,32 +56,44 @@ function SpokenLanguageSelector({ className }: IProps) {
 
     /**
      * Maps supported languages to Select component options format.
+     * Prepends a placeholder option so the user must make an explicit choice.
      */
-    const languageOptions = SUPPORTED_SPOKEN_LANGUAGES.map(lang => ({
-        value: lang,
-        label: t(`translation.languages.${lang}`)
-    }));
+    const languageOptions = [
+        {
+            value: "",
+            label: t("translation.selectLanguagePlaceholder"),
+        },
+        ...SUPPORTED_SPOKEN_LANGUAGES.map((lang) => ({
+            value: lang,
+            label: t(`translation.languages.${lang}`),
+        })),
+    ];
 
     /**
      * Handles language selection changes.
+     * Ignores selection of the placeholder (empty value).
      */
-    const onLanguageChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
-        const language = e.target.value as SpokenLanguage;
+    const onLanguageChange = useCallback(
+        (e: React.ChangeEvent<HTMLSelectElement>) => {
+            const value = e.target.value;
 
-        dispatch(setSpokenLanguage(language));
-    }, [ dispatch ]);
+            if (value) {
+                dispatch(setSpokenLanguage(value as SpokenLanguage));
+            }
+        },
+        [dispatch],
+    );
 
     return (
-        <div className = { cx(classes.container, className) }>
-            <span className = { classes.label }>
-                {t('translation.spokenLanguageLabel')}
-            </span>
+        <div className={cx(classes.container, className)}>
+            <span className={classes.label}>{t("translation.spokenLanguageLabel")}</span>
             <Select
-                className = { classes.select }
-                id = 'spoken-language-select'
-                onChange = { onLanguageChange }
-                options = { languageOptions }
-                value = { selectedLanguage } />
+                className={classes.select}
+                id="spoken-language-select"
+                onChange={onLanguageChange}
+                options={languageOptions}
+                value={selectedLanguage ?? ""}
+            />
         </div>
     );
 }
