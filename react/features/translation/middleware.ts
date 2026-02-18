@@ -1,7 +1,7 @@
 import { AnyAction } from "redux";
 
 import { IStore } from "../app/types";
-import { CONFERENCE_JOINED, DATA_CHANNEL_OPENED, P2P_STATUS_CHANGED } from "../base/conference/actionTypes";
+import { CONFERENCE_JOINED, CONFERENCE_LEFT, DATA_CHANNEL_OPENED, P2P_STATUS_CHANGED } from "../base/conference/actionTypes";
 import { getCurrentConference } from "../base/conference/functions";
 import { PARTICIPANT_JOINED, PARTICIPANT_LEFT, PARTICIPANT_UPDATED } from "../base/participants/actionTypes";
 import { getRemoteParticipants } from "../base/participants/functions";
@@ -57,6 +57,13 @@ MiddlewareRegistry.register((store) => (next) => (action: AnyAction) => {
             _updateAudioSubscription(store);
             break;
 
+        case CONFERENCE_LEFT:
+            // Reset selection state so the next conference starts fresh
+            // (no stale subscription from a prior session).
+            logger.info("Conference left, resetting selection state");
+            _hasExplicitSelection = false;
+            break;
+
         case DATA_CHANNEL_OPENED:
             // Bridge channel just opened. Force-resend audio subscription
             // in case the CONFERENCE_JOINED call was silently dropped
@@ -98,13 +105,14 @@ MiddlewareRegistry.register((store) => (next) => (action: AnyAction) => {
             break;
 
         case PARTICIPANT_UPDATED: {
-            // If a participant's display name changed to or from a translator name,
+            // If a remote participant's display name changed to or from a translator name,
             // re-evaluate audio subscription. This handles the case where display
             // name is set/changed after the initial PARTICIPANT_JOINED event.
+            // Skip local participant updates (name typing per keystroke is irrelevant).
             const updatedParticipant = action.participant;
 
-            if (updatedParticipant?.name !== undefined) {
-                logger.info(
+            if (updatedParticipant?.name !== undefined && !updatedParticipant?.local) {
+                logger.debug(
                     `Participant updated: id=${updatedParticipant.id}, name="${updatedParticipant.name}"`,
                 );
                 _updateAudioSubscription(store);
