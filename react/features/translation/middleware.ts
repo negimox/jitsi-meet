@@ -13,6 +13,7 @@ import { NOTIFICATION_TIMEOUT_TYPE } from "../notifications/constants";
 import { SET_SPOKEN_LANGUAGE } from "./actionTypes";
 import { SpokenLanguage } from "./constants";
 import { getSpokenLanguage } from "./functions";
+import logger from "./logger";
 
 // Import reducer to ensure it gets registered
 import "./reducer";
@@ -29,11 +30,6 @@ const TRANSLATOR_DISPLAY_NAME_PREFIX = "translator-";
  * Set to true when SET_SPOKEN_LANGUAGE is dispatched.
  */
 let _hasExplicitSelection = false;
-
-/**
- * Logging prefix for translation middleware messages.
- */
-const LOG_PREFIX = "[translation-middleware]";
 
 /**
  * Middleware that manages audio subscriptions for live translation.
@@ -57,7 +53,7 @@ MiddlewareRegistry.register((store) => (next) => (action: AnyAction) => {
         case CONFERENCE_JOINED:
             // Apply audio subscription based on explicit selection state.
             // May silently fail if bridge channel isn't open yet.
-            console.log(`${LOG_PREFIX} Conference joined, applying initial audio subscription`);
+            logger.info("Conference joined, applying initial audio subscription");
             _updateAudioSubscription(store);
             break;
 
@@ -67,7 +63,7 @@ MiddlewareRegistry.register((store) => (next) => (action: AnyAction) => {
             // (RTC.sendReceiverAudioSubscriptionMessage drops messages
             // when the channel is not yet open, unlike video constraints
             // which are cached and sent on channel open).
-            console.log(`${LOG_PREFIX} Data channel opened, force-resending audio subscription`);
+            logger.info("Data channel opened, force-resending audio subscription");
             _forceUpdateAudioSubscription(store);
             break;
 
@@ -76,15 +72,15 @@ MiddlewareRegistry.register((store) => (next) => (action: AnyAction) => {
             // The bridge channel subscription state may have been lost during P2P.
             // Force-resend audio subscription to ensure JVB applies our filters.
             if (!action.p2p) {
-                console.log(`${LOG_PREFIX} P2P ended, forcing audio subscription update for JVB`);
+                logger.info("P2P ended, forcing audio subscription update for JVB");
                 _forceUpdateAudioSubscription(store);
             } else {
-                console.log(`${LOG_PREFIX} P2P started — audio subscription has no effect in P2P mode`);
+                logger.info("P2P started — audio subscription has no effect in P2P mode");
             }
             break;
 
         case SET_SPOKEN_LANGUAGE:
-            console.log(`${LOG_PREFIX} Spoken language set to "${action.language}", hasExplicitSelection=true`);
+            logger.info(`Spoken language set to "${action.language}", hasExplicitSelection=true`);
             _hasExplicitSelection = true;
             _updateAudioSubscription(store);
             _notifyLanguageChange(store, action.language);
@@ -93,8 +89,8 @@ MiddlewareRegistry.register((store) => (next) => (action: AnyAction) => {
         case PARTICIPANT_JOINED:
             // If a translator agent joined, update exclusion list
             if (_isTranslatorName(action.participant?.name)) {
-                console.log(
-                    `${LOG_PREFIX} Translator joined: name="${action.participant?.name}", id=${action.participant?.id}`,
+                logger.info(
+                    `Translator joined: name="${action.participant?.name}", id=${action.participant?.id}`,
                 );
                 _updateAudioSubscription(store);
                 _notifyTranslatorArrival(store, action.participant?.name);
@@ -108,8 +104,8 @@ MiddlewareRegistry.register((store) => (next) => (action: AnyAction) => {
             const updatedParticipant = action.participant;
 
             if (updatedParticipant?.name !== undefined) {
-                console.log(
-                    `${LOG_PREFIX} Participant updated: id=${updatedParticipant.id}, name="${updatedParticipant.name}"`,
+                logger.info(
+                    `Participant updated: id=${updatedParticipant.id}, name="${updatedParticipant.name}"`,
                 );
                 _updateAudioSubscription(store);
             }
@@ -120,7 +116,7 @@ MiddlewareRegistry.register((store) => (next) => (action: AnyAction) => {
             // Cannot check name (PARTICIPANT_LEFT only carries id).
             // Always re-evaluate; ReceiveAudioController deduplicates
             // identical messages so this is cheap when nothing changes.
-            console.log(`${LOG_PREFIX} Participant left: id=${action.participant?.id}`);
+            logger.info(`Participant left: id=${action.participant?.id}`);
             _updateAudioSubscription(store);
             break;
     }
@@ -184,13 +180,13 @@ function _forceUpdateAudioSubscription(store: IStore): void {
     }
 
     if (typeof (conference as any).setAudioSubscriptionMode !== "function") {
-        console.log(`${LOG_PREFIX} setAudioSubscriptionMode not available on conference object`);
+        logger.info("setAudioSubscriptionMode not available on conference object");
 
         return;
     }
 
     // Reset ReceiveAudioController's internal state to bypass deduplication.
-    console.log(`${LOG_PREFIX} Force-resetting to All before reapplying subscription (dedup bypass)`);
+    logger.info("Force-resetting to All before reapplying subscription (dedup bypass)");
     (conference as any).setAudioSubscriptionMode({ mode: "All" });
 
     // Now send the actual subscription (no longer deduped since state was reset).
@@ -221,7 +217,7 @@ function _updateAudioSubscription(store: IStore): void {
 
     // Guard: setAudioSubscriptionMode may not exist on older JVB/lib-jitsi-meet
     if (typeof (conference as any).setAudioSubscriptionMode !== "function") {
-        console.log(`${LOG_PREFIX} setAudioSubscriptionMode not available, skipping`);
+        logger.info("setAudioSubscriptionMode not available, skipping");
 
         return;
     }
@@ -231,7 +227,7 @@ function _updateAudioSubscription(store: IStore): void {
     if (translators.length === 0) {
         // No translators in the room — reset to default so we don't
         // leave a stale exclusion list from a previous state.
-        console.log(`${LOG_PREFIX} No translators present, setting mode=All`);
+        logger.info("No translators present, setting mode=All");
         (conference as any).setAudioSubscriptionMode({ mode: "All" });
 
         return;
@@ -241,8 +237,8 @@ function _updateAudioSubscription(store: IStore): void {
     if (!_hasExplicitSelection) {
         const excludeSources = translators.map((t) => `${t.id}-a0`);
 
-        console.log(
-            `${LOG_PREFIX} No explicit selection, excluding ${translators.length} translator(s):` +
+        logger.info(
+            `No explicit selection, excluding ${translators.length} translator(s):` +
                 ` [${translators.map((t) => `${t.id}(${t.name})`).join(", ")}]` +
                 ` sourceNames=[${excludeSources.join(", ")}]`,
         );
@@ -265,11 +261,11 @@ function _updateAudioSubscription(store: IStore): void {
     if (excludeSources.length === 0) {
         // The only translator(s) present match the selected language.
         // No need to exclude anything.
-        console.log(`${LOG_PREFIX} All translators match selected language "${spokenLanguage}", setting mode=All`);
+        logger.info(`All translators match selected language "${spokenLanguage}", setting mode=All`);
         (conference as any).setAudioSubscriptionMode({ mode: "All" });
     } else {
-        console.log(
-            `${LOG_PREFIX} Excluding ${excludeSources.length} translator(s), keeping "${selectedName}",` +
+        logger.info(
+            `Excluding ${excludeSources.length} translator(s), keeping "${selectedName}",` +
                 ` mode=Exclude, sourceNames=[${excludeSources.join(", ")}]`,
         );
         (conference as any).setAudioSubscriptionMode({
