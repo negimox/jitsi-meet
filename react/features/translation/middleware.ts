@@ -1,7 +1,7 @@
 import { AnyAction } from 'redux';
 
 import { IStore } from '../app/types';
-import { CONFERENCE_JOINED } from '../base/conference/actionTypes';
+import { CONFERENCE_JOINED, DATA_CHANNEL_OPENED } from '../base/conference/actionTypes';
 import { getCurrentConference } from '../base/conference/functions';
 import {
     PARTICIPANT_JOINED,
@@ -56,8 +56,18 @@ MiddlewareRegistry.register(store => next => (action: AnyAction) => {
 
     switch (action.type) {
     case CONFERENCE_JOINED:
-        // Apply audio subscription based on explicit selection state
+        // Apply audio subscription based on explicit selection state.
+        // May silently fail if bridge channel isn't open yet.
         _updateAudioSubscription(store);
+        break;
+
+    case DATA_CHANNEL_OPENED:
+        // Bridge channel just opened. Force-resend audio subscription
+        // in case the CONFERENCE_JOINED call was silently dropped
+        // (RTC.sendReceiverAudioSubscriptionMessage drops messages
+        // when the channel is not yet open, unlike video constraints
+        // which are cached and sent on channel open).
+        _forceUpdateAudioSubscription(store);
         break;
 
     case SET_SPOKEN_LANGUAGE:
@@ -113,6 +123,42 @@ function _getTranslatorParticipants(store: IStore): IParticipant[] {
     }
 
     return translators;
+}
+
+/**
+ * Forces an audio subscription update, bypassing ReceiveAudioController's
+ * deduplication logic.
+ *
+ * When CONFERENCE_JOINED fires before the bridge data channel is open,
+ * ReceiveAudioController updates its internal state but the message is
+ * silently dropped by RTC (channel not open). A subsequent call with
+ * identical params is then deduped. This function resets the controller
+ * to "All" first, which clears the internal state, then calls
+ * _updateAudioSubscription to send the correct subscription.
+ *
+ * Both calls are synchronous, so there is no window where incorrect
+ * audio is received.
+ *
+ * @param {IStore} store - The redux store.
+ * @returns {void}
+ */
+function _forceUpdateAudioSubscription(store: IStore): void {
+    const state = store.getState();
+    const conference = getCurrentConference(state);
+
+    if (!conference) {
+        return;
+    }
+
+    if (typeof (conference as any).setAudioSubscriptionMode !== 'function') {
+        return;
+    }
+
+    // Reset ReceiveAudioController's internal state to bypass deduplication.
+    (conference as any).setAudioSubscriptionMode({ mode: 'All' });
+
+    // Now send the actual subscription (no longer deduped since state was reset).
+    _updateAudioSubscription(store);
 }
 
 /**
