@@ -1,5 +1,6 @@
-# Start with the stable official image
-FROM jitsi/web:stable-10710
+# Start with the unstable official image (required for ReceiverAudioSubscription support in JVB).
+# Must match JITSI_IMAGE_VERSION in docker-jitsi-meet/.env.
+FROM jitsi/web:unstable
 
 # 1. Clean default UI to avoid stale files
 RUN rm -rf /usr/share/jitsi-meet/*

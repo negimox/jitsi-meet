@@ -1,0 +1,16 @@
+# Exclude directories not needed in the Docker image.
+# The Dockerfile only COPYs: libs/, css/, images/, sounds/, fonts/, lang/,
+# static/, *.html, manifest.json, pwa-worker.js, *.ico
+node_modules/
+build/
+.git/
+android/
+ios/
+react/
+react-native-sdk/
+tests/
+doc/
+resources/
+connection_optimization/
+.github/
+.vscode/
