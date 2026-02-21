@@ -55,6 +55,11 @@ MiddlewareRegistry.register((store) => (next) => (action: AnyAction) => {
             // May silently fail if bridge channel isn't open yet.
             logger.info("Conference joined, applying initial audio subscription");
             _updateAudioSubscription(store);
+
+            // Broadcast spoken language as a participant property so translator
+            // bots can identify which participants speak which language and
+            // exclude same-language speakers from audio capture (self-echo prevention).
+            _broadcastSpokenLanguage(store);
             break;
 
         case CONFERENCE_LEFT:
@@ -90,6 +95,7 @@ MiddlewareRegistry.register((store) => (next) => (action: AnyAction) => {
             logger.info(`Spoken language set to "${action.language}", hasExplicitSelection=true`);
             _hasExplicitSelection = true;
             _updateAudioSubscription(store);
+            _broadcastSpokenLanguage(store);
             _notifyLanguageChange(store, action.language);
             break;
 
@@ -160,6 +166,39 @@ function _getTranslatorParticipants(store: IStore): IParticipant[] {
     }
 
     return translators;
+}
+
+/**
+ * Broadcasts the user's spoken language as a participant property via XMPP presence.
+ * Translator bots listen for this property to know which participants speak which
+ * language, enabling them to exclude same-language speakers from audio capture
+ * and prevent self-echo.
+ *
+ * @param {IStore} store - The redux store.
+ * @returns {void}
+ */
+function _broadcastSpokenLanguage(store: IStore): void {
+    if (!_hasExplicitSelection) {
+        return;
+    }
+
+    const state = store.getState();
+    const conference = getCurrentConference(state);
+
+    if (!conference) {
+        return;
+    }
+
+    const spokenLanguage = getSpokenLanguage(state);
+
+    if (!spokenLanguage) {
+        return;
+    }
+
+    if (typeof (conference as any).setLocalParticipantProperty === "function") {
+        logger.info(`Broadcasting spokenLanguage="${spokenLanguage}" as participant property`);
+        (conference as any).setLocalParticipantProperty("spokenLanguage", spokenLanguage);
+    }
 }
 
 /**
