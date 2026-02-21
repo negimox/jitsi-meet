@@ -1,7 +1,12 @@
 import { AnyAction } from "redux";
 
 import { IStore } from "../app/types";
-import { CONFERENCE_JOINED, CONFERENCE_LEFT, DATA_CHANNEL_OPENED, P2P_STATUS_CHANGED } from "../base/conference/actionTypes";
+import {
+    CONFERENCE_JOINED,
+    CONFERENCE_LEFT,
+    DATA_CHANNEL_OPENED,
+    P2P_STATUS_CHANGED,
+} from "../base/conference/actionTypes";
 import { getCurrentConference } from "../base/conference/functions";
 import { PARTICIPANT_JOINED, PARTICIPANT_LEFT, PARTICIPANT_UPDATED } from "../base/participants/actionTypes";
 import { getRemoteParticipants } from "../base/participants/functions";
@@ -102,9 +107,7 @@ MiddlewareRegistry.register((store) => (next) => (action: AnyAction) => {
         case PARTICIPANT_JOINED:
             // If a translator agent joined, update exclusion list
             if (_isTranslatorName(action.participant?.name)) {
-                logger.info(
-                    `Translator joined: name="${action.participant?.name}", id=${action.participant?.id}`,
-                );
+                logger.info(`Translator joined: name="${action.participant?.name}", id=${action.participant?.id}`);
                 _updateAudioSubscription(store);
                 _notifyTranslatorArrival(store, action.participant?.name);
             }
@@ -118,9 +121,7 @@ MiddlewareRegistry.register((store) => (next) => (action: AnyAction) => {
             const updatedParticipant = action.participant;
 
             if (updatedParticipant?.name !== undefined && !updatedParticipant?.local) {
-                logger.debug(
-                    `Participant updated: id=${updatedParticipant.id}, name="${updatedParticipant.name}"`,
-                );
+                logger.debug(`Participant updated: id=${updatedParticipant.id}, name="${updatedParticipant.name}"`);
                 _updateAudioSubscription(store);
             }
             break;
