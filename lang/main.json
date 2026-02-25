@@ -1544,6 +1544,7 @@
         "selectLanguagePlaceholder": "-- Select Language --",
         "spokenLanguage": "My Spoken Language",
         "spokenLanguageDialogDescription": "Select the language you will be speaking in the call. This helps others receive accurate translations.",
+        "spokenLanguageDialogMandatory": "Please select your spoken language to continue. This is required for live audio translation to work correctly.",
         "spokenLanguageDialogTitle": "Spoken Language",
         "spokenLanguageLabel": "I speak:",
         "spokenLanguageTooltip": "Select the language you speak",

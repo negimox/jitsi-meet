@@ -8,6 +8,7 @@ import {
     P2P_STATUS_CHANGED,
 } from "../base/conference/actionTypes";
 import { getCurrentConference } from "../base/conference/functions";
+import { openDialog } from "../base/dialog/actions";
 import { PARTICIPANT_JOINED, PARTICIPANT_LEFT, PARTICIPANT_UPDATED } from "../base/participants/actionTypes";
 import { getRemoteParticipants } from "../base/participants/functions";
 import { IParticipant } from "../base/participants/types";
@@ -17,6 +18,7 @@ import { showSuccessNotification, showWarningNotification } from "../notificatio
 import { NOTIFICATION_TIMEOUT_TYPE } from "../notifications/constants";
 
 import { SET_SPOKEN_LANGUAGE } from "./actionTypes";
+import SpokenLanguageSelectorDialog from "./components/web/SpokenLanguageSelectorDialog";
 import { DUCKING_VOLUME, NORMAL_VOLUME, SpokenLanguage } from "./constants";
 import { getSpokenLanguage } from "./functions";
 import logger from "./logger";
@@ -67,6 +69,10 @@ MiddlewareRegistry.register((store) => (next) => (action: AnyAction) => {
             // bots can identify which participants speak which language and
             // exclude same-language speakers from audio capture (self-echo prevention).
             _broadcastSpokenLanguage(store);
+
+            // If no language has been selected (e.g., pre-join screen was skipped),
+            // show a mandatory language selection dialog.
+            _promptLanguageSelectionIfNeeded(store);
             break;
 
         case CONFERENCE_LEFT:
@@ -134,7 +140,9 @@ MiddlewareRegistry.register((store) => (next) => (action: AnyAction) => {
                 // When a participant changes their spoken language,
                 // re-evaluate ducking volumes for all participants.
                 if (updatedParticipant?.spokenLanguage !== undefined) {
-                    logger.info(`Participant spokenLanguage changed: id=${updatedParticipant.id}, lang="${updatedParticipant.spokenLanguage}"`);
+                    logger.info(
+                        `Participant spokenLanguage changed: id=${updatedParticipant.id}, lang="${updatedParticipant.spokenLanguage}"`,
+                    );
                     _updateParticipantVolumes(store);
                 }
             }
@@ -421,6 +429,26 @@ function _resetParticipantVolumes(store: IStore): void {
             continue;
         }
         dispatch(setVolume(id, NORMAL_VOLUME));
+    }
+}
+
+/**
+ * Shows the language selection dialog if the user hasn't selected a spoken
+ * language yet. This handles the case where the pre-join screen is skipped
+ * or language selection was not completed before joining.
+ *
+ * The dialog is non-dismissable until a language is selected.
+ *
+ * @param {IStore} store - The redux store.
+ * @returns {void}
+ */
+function _promptLanguageSelectionIfNeeded(store: IStore): void {
+    const state = store.getState();
+    const spokenLanguage = getSpokenLanguage(state);
+
+    if (!spokenLanguage) {
+        logger.info("No spoken language selected, showing mandatory language selection dialog");
+        store.dispatch(openDialog("SpokenLanguageSelectorDialog", SpokenLanguageSelectorDialog));
     }
 }
 

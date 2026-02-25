@@ -56,13 +56,19 @@ function SpokenLanguageSelector({ className }: IProps) {
 
     /**
      * Maps supported languages to Select component options format.
-     * Prepends a placeholder option so the user must make an explicit choice.
+     * Includes a prompt placeholder only when no language is selected yet.
+     * Once a language is chosen, only real language options are shown
+     * (prevents deselection).
      */
     const languageOptions = [
-        {
-            value: "",
-            label: t("translation.selectLanguagePlaceholder"),
-        },
+        ...(!selectedLanguage
+            ? [
+                  {
+                      value: "",
+                      label: t("translation.selectLanguagePlaceholder"),
+                  },
+              ]
+            : []),
         ...SUPPORTED_SPOKEN_LANGUAGES.map((lang) => ({
             value: lang,
             label: t(`translation.languages.${lang}`),
