@@ -523,6 +523,12 @@ StateListenerRegistry.register(
                         conference,
                         id: participant.getId(),
                         remoteControlSessionStatus: value
+                    })),
+                'spokenLanguage': (participant: IJitsiParticipant, value: string) =>
+                    store.dispatch(participantUpdated({
+                        conference,
+                        id: participant.getId(),
+                        spokenLanguage: value
                     }))
             };
 

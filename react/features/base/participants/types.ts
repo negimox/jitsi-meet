@@ -40,6 +40,7 @@ export interface IParticipant {
     remoteControlSessionStatus?: boolean;
     role?: string;
     sources?: Map<string, Map<string, ISourceInfo>>;
+    spokenLanguage?: string;
     supportsRemoteControl?: boolean;
     userContext?: IUserContext;
 }

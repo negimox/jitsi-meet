@@ -12,11 +12,12 @@ import { PARTICIPANT_JOINED, PARTICIPANT_LEFT, PARTICIPANT_UPDATED } from "../ba
 import { getRemoteParticipants } from "../base/participants/functions";
 import { IParticipant } from "../base/participants/types";
 import MiddlewareRegistry from "../base/redux/MiddlewareRegistry";
+import { setVolume } from "../filmstrip/actions.web";
 import { showSuccessNotification, showWarningNotification } from "../notifications/actions";
 import { NOTIFICATION_TIMEOUT_TYPE } from "../notifications/constants";
 
 import { SET_SPOKEN_LANGUAGE } from "./actionTypes";
-import { SpokenLanguage } from "./constants";
+import { DUCKING_VOLUME, NORMAL_VOLUME, SpokenLanguage } from "./constants";
 import { getSpokenLanguage } from "./functions";
 import logger from "./logger";
 
@@ -60,6 +61,7 @@ MiddlewareRegistry.register((store) => (next) => (action: AnyAction) => {
             // May silently fail if bridge channel isn't open yet.
             logger.info("Conference joined, applying initial audio subscription");
             _updateAudioSubscription(store);
+            _updateParticipantVolumes(store);
 
             // Broadcast spoken language as a participant property so translator
             // bots can identify which participants speak which language and
@@ -70,7 +72,8 @@ MiddlewareRegistry.register((store) => (next) => (action: AnyAction) => {
         case CONFERENCE_LEFT:
             // Reset selection state so the next conference starts fresh
             // (no stale subscription from a prior session).
-            logger.info("Conference left, resetting selection state");
+            logger.info("Conference left, resetting selection state and volumes");
+            _resetParticipantVolumes(store);
             _hasExplicitSelection = false;
             break;
 
@@ -100,6 +103,7 @@ MiddlewareRegistry.register((store) => (next) => (action: AnyAction) => {
             logger.info(`Spoken language set to "${action.language}", hasExplicitSelection=true`);
             _hasExplicitSelection = true;
             _updateAudioSubscription(store);
+            _updateParticipantVolumes(store);
             _broadcastSpokenLanguage(store);
             _notifyLanguageChange(store, action.language);
             break;
@@ -111,18 +115,28 @@ MiddlewareRegistry.register((store) => (next) => (action: AnyAction) => {
                 _updateAudioSubscription(store);
                 _notifyTranslatorArrival(store, action.participant?.name);
             }
+
+            // Duck new other-language participants (applies to all, not just translators)
+            _updateParticipantVolumes(store);
             break;
 
         case PARTICIPANT_UPDATED: {
-            // If a remote participant's display name changed to or from a translator name,
-            // re-evaluate audio subscription. This handles the case where display
-            // name is set/changed after the initial PARTICIPANT_JOINED event.
+            // Re-evaluate audio subscription and ducking when remote participants change.
             // Skip local participant updates (name typing per keystroke is irrelevant).
             const updatedParticipant = action.participant;
 
-            if (updatedParticipant?.name !== undefined && !updatedParticipant?.local) {
-                logger.debug(`Participant updated: id=${updatedParticipant.id}, name="${updatedParticipant.name}"`);
-                _updateAudioSubscription(store);
+            if (!updatedParticipant?.local) {
+                if (updatedParticipant?.name !== undefined) {
+                    logger.debug(`Participant updated: id=${updatedParticipant.id}, name="${updatedParticipant.name}"`);
+                    _updateAudioSubscription(store);
+                }
+
+                // When a participant changes their spoken language,
+                // re-evaluate ducking volumes for all participants.
+                if (updatedParticipant?.spokenLanguage !== undefined) {
+                    logger.info(`Participant spokenLanguage changed: id=${updatedParticipant.id}, lang="${updatedParticipant.spokenLanguage}"`);
+                    _updateParticipantVolumes(store);
+                }
             }
             break;
         }
@@ -335,6 +349,78 @@ function _updateAudioSubscription(store: IStore): void {
             mode: "Exclude",
             list: excludeSources,
         });
+    }
+}
+
+/**
+ * Updates the volume of all remote participants based on their spoken language
+ * relative to the user's selected language.
+ *
+ * When translation is active, other-language speakers are ducked to DUCKING_VOLUME
+ * (15%) so the TTS translation dominates. Same-language speakers and participants
+ * with unknown language remain at full volume.
+ *
+ * Uses the existing filmstrip setVolume action which sets audio.volume on the
+ * HTMLAudioElement via the AudioTrack component.
+ *
+ * @param {IStore} store - The redux store.
+ * @returns {void}
+ */
+function _updateParticipantVolumes(store: IStore): void {
+    const state = store.getState();
+    const conference = getCurrentConference(state);
+
+    if (!conference) {
+        return;
+    }
+
+    const spokenLanguage = getSpokenLanguage(state);
+    const remoteParticipants = getRemoteParticipants(state);
+    const { dispatch } = store;
+
+    for (const [id, participant] of remoteParticipants) {
+        // Skip translator participants — their volume is always normal.
+        if (_isTranslatorName(participant.name)) {
+            continue;
+        }
+
+        if (!_hasExplicitSelection || !spokenLanguage) {
+            // No language selected: everyone at normal volume.
+            dispatch(setVolume(id, NORMAL_VOLUME));
+
+            continue;
+        }
+
+        const participantLang = participant.spokenLanguage;
+
+        if (participantLang && participantLang !== spokenLanguage) {
+            // Different language: duck their audio so TTS translation dominates.
+            logger.debug(`Ducking participant ${id} (lang="${participantLang}") to ${DUCKING_VOLUME}`);
+            dispatch(setVolume(id, DUCKING_VOLUME));
+        } else {
+            // Same language or unknown: normal volume.
+            dispatch(setVolume(id, NORMAL_VOLUME));
+        }
+    }
+}
+
+/**
+ * Resets all remote participant volumes to normal.
+ * Called when leaving a conference to clean up ducking state.
+ *
+ * @param {IStore} store - The redux store.
+ * @returns {void}
+ */
+function _resetParticipantVolumes(store: IStore): void {
+    const state = store.getState();
+    const remoteParticipants = getRemoteParticipants(state);
+    const { dispatch } = store;
+
+    for (const [id, participant] of remoteParticipants) {
+        if (_isTranslatorName(participant.name)) {
+            continue;
+        }
+        dispatch(setVolume(id, NORMAL_VOLUME));
     }
 }
 
