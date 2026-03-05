@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
 import { makeStyles } from "tss-react/mui";
@@ -34,15 +34,20 @@ function SpokenLanguageSelectorDialog() {
     const { classes } = useStyles();
     const selectedLanguage = useSelector((state: IReduxState) => getSpokenLanguage(state));
 
+    // Capture the language at mount time so we can detect changes made
+    // *within* this dialog vs. the language that was already set before opening.
+    const initialLanguageRef = useRef(selectedLanguage);
+
     // If the user already has a language selected (e.g., opening from toolbar),
     // the dialog is dismissable. If no language is selected (mandatory prompt),
     // it cannot be closed.
-    const isMandatory = !selectedLanguage;
+    const isMandatory = !initialLanguageRef.current;
 
-    // Auto-close the dialog when a language is selected.
-    // This handles the mandatory prompt case: user picks a language → dialog closes.
+    // Auto-close the dialog when the language changes from within the dialog.
+    // For the mandatory case (no initial language), any selection closes it.
+    // For the toolbar case (language already set), only a *different* selection closes it.
     useEffect(() => {
-        if (selectedLanguage) {
+        if (selectedLanguage && selectedLanguage !== initialLanguageRef.current) {
             dispatch(hideDialog("SpokenLanguageSelectorDialog"));
         }
     }, [selectedLanguage, dispatch]);
