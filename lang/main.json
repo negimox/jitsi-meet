@@ -1538,7 +1538,9 @@
     "translation": {
         "languages": {
             "en": "English",
-            "hi": "Hindi"
+            "hi": "Hindi",
+            "ur": "Urdu",
+            "ar": "Arabic"
         },
         "notInConference": "You are not currently in a conference.",
         "selectLanguagePlaceholder": "-- Select Language --",

@@ -1,8 +1,7 @@
 /**
  * Supported spoken languages for live audio translation.
- * Currently limited to English and Hindi for Phase 1.
  */
-export const SUPPORTED_SPOKEN_LANGUAGES = ["en", "hi"] as const;
+export const SUPPORTED_SPOKEN_LANGUAGES = ["en", "hi", "ur", "ar"] as const;
 
 /**
  * Type for supported spoken language codes.
